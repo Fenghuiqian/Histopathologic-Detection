@@ -114,7 +114,7 @@ def data_gen(list_files, id_label_map, batch_size, augment=False):
             yield np.array(X), np.array(Y)
 
 
-def dn121_model(input_shape=(96, 96, 3), include_top=False):
+def dn201_model(input_shape=(96, 96, 3), include_top=False):
     inputs = Input(input_shape)
     base_model = DenseNet201(weights=None, include_top=include_top, input_shape=input_shape)
     x = base_model(inputs)
@@ -139,7 +139,7 @@ def main():
     train, val = train_test_split(labeled_files, test_size=0.1, random_state=42)
 
     # model fit
-    model = dn121_model()
+    model = dn201_model()
     weights_saved = './data/weights/model_finetune.h5'
     checkpoint = ModelCheckpoint(weights_saved, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     model.fit_generator(

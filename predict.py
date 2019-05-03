@@ -4,7 +4,6 @@
 import numpy as np
 import pandas as pd
 from glob import glob
-from random import shuffle
 import cv2
 from keras.applications.imagenet_utils import preprocess_input
 from keras.models import load_model
@@ -128,7 +127,7 @@ def main():
 
     # save submit
     df = pd.DataFrame({'id': test_id, 'label': pred_res})
-    df.to_csv("dn121_aug5.csv", index=False)
+    df.to_csv("dn201_aug5.csv", index=False)
 
 
 
