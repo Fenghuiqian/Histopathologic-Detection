@@ -7,10 +7,7 @@ from glob import glob
 from random import shuffle
 import cv2
 from keras.applications.imagenet_utils import preprocess_input
-from keras.layers import Dense, GlobalAveragePooling2D, Input
-from keras.models import Model
-from keras.applications.densenet import DenseNet201
-from keras.optimizers import Adam, SGD, RMSprop
+from keras.models import load_model
 from imgaug import augmenters as iaa
 import imgaug as ia
 
@@ -103,18 +100,6 @@ def data_gen_test(list_files, batch_size, augment=False):
             yield np.array(X)
 
 
-def dn121_model(input_shape=(96, 96, 3), include_top=False):
-    inputs = Input(input_shape)
-    base_model = DenseNet201(weights=None, include_top=include_top, input_shape=input_shape)
-    x = base_model(inputs)
-    out = GlobalAveragePooling2D()(x)
-    outputs = Dense(1, activation="sigmoid", name="outputs")(out)
-    model = Model(inputs=inputs, outputs=outputs)
-    for layer in base_model.layers:
-        layer.trainable = True
-    model.compile(optimizer=Adam(0.0001), loss='binary_crossentropy', metrics=['accuracy'])
-    return model
-
 
 
 def main():
@@ -123,10 +108,9 @@ def main():
     test_files = glob('./data/test/*.tif')
     test_file_num = len(test_files)
 
-    # load weights
-    model = dn121_model()
-    weight_path = "./data/weights/model.h5"
-    model.load_weights(weight_path)
+    # load model
+    model_path = "./data/weights/model.h5"
+    model = load_model(model_path)
 
     # aug 5times for predict
     aug_times = 5
