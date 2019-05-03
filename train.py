@@ -145,7 +145,7 @@ def main():
     model.fit_generator(
             data_gen(train, id_label_map, batch_size, augment=True),
             validation_data=data_gen(val, id_label_map, batch_size),
-            epochs=4, verbose=1,
+            epochs=8, verbose=1,
             callbacks=[checkpoint],
             steps_per_epoch=len(train) // batch_size,
             validation_steps=len(val) // batch_size
