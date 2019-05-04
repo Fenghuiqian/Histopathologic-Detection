@@ -5,11 +5,15 @@ import numpy as np
 import pandas as pd
 from glob import glob
 import cv2
+import math
 from keras.applications.imagenet_utils import preprocess_input
 from keras.models import load_model
 from imgaug import augmenters as iaa
 import imgaug as ia
 
+
+def get_id_from_file_path(file_path):
+    return file_path.split(os.path.sep)[-1].replace('.tif', '')
 
 def chunker(seq, size):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
@@ -97,6 +101,7 @@ def data_gen_test(list_files, batch_size, augment=False):
                 X = seq.augment_images(X)
             X = [preprocess_input(x) for x in X]
             yield np.array(X)
+            print('end loop once')
 
 
 
@@ -116,18 +121,29 @@ def main():
     for i in range(aug_times):
         test_generator = data_gen_test(test_files, batch_size, augment=True)
         if i == 0:
-            pred_res = model.predict_generator(test_generator, test_file_num)
+            pred_res_plus = model.predict_generator(test_generator, math.ceil(test_file_num / batch_size)).ravel()
+            pred_res_mul = pred_res_plus
         else:
-            pred_res *= model.predict_generator(test_generator, test_file_num)
+            pred = model.predict_generator(test_generator, math.ceil(test_file_num / batch_size)).ravel()
+            pred_res_mul = pred * pred_res_mul
+            pred_res_plus = pred + pred_res_plus
 
-    pred_res = pred_res**(1/aug_times)
+    pred_res_mul = pred_res_mul ** (1 / aug_times)
+    pred_res_plus = pred_res_plus / aug_times
+
 
     # image id
-    test_id = [i.lstrip("../input/histopathologic-cancer-detection/test/").rstrip(".tif") for i in test_files]
+    test_id = []
+    for batch in chunker(test_files, batch_size):
+        id_batch = [get_id_from_file_path(x) for x in batch]
+        test_id += id_batch
+
 
     # save submit
-    df = pd.DataFrame({'id': test_id, 'label': pred_res})
-    df.to_csv("dn201_aug5.csv", index=False)
+    df = pd.DataFrame({'id': test_id, 'label': pred_res_mul})
+    df.to_csv("dn201_aug5_mul.csv", index=False)
+    df = pd.DataFrame({'id': test_id, 'label': pred_res_plus})
+    df.to_csv("dn201_aug5_plus.csv", index=False)
 
 
 
